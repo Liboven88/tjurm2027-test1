@@ -7,7 +7,9 @@ int my_strlen(char *str) {
      */
 
     // IMPLEMENT YOUR CODE HERE
-    return 0;
+    int len=0;
+    while (str[len]!='\0')++len;
+    return len;
 }
 
 
