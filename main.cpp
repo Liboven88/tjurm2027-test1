@@ -156,8 +156,8 @@ int main() {
   test_strlen();
   std::cout << "开始测试函数 << my_strcat >> ..." << std::endl;
   test_strcat();
-  // std::cout << "开始测试函数 << my_strstr >> ..." << std::endl;
-  // test_strstr();
+  std::cout << "开始测试函数 << my_strstr >> ..." << std::endl;
+  test_strstr();
   // std::cout << "开始测试函数 << rgb2gray >> ..." << std::endl;
   // test_rgb2gray();
   // std::cout << "开始测试函数 << resize >> ..." << std::endl;

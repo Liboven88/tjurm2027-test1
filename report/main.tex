@@ -1,0 +1,176 @@
+% ============================================================
+% 第一次测试 6 题解题报告
+%
+% 编译（中文必须用 xelatex，且编两遍目录才准）：
+%     cd ~/tjurm2027-test1/report
+%     xelatex main.tex && xelatex main.tex
+%     （或 latexmk -xelatex -pdf main.tex）
+%
+% 填写纪律：每节固定四小节 —— 题目 / 思路 / 代码 / 结果。
+%   题目 = 用自己的话复述（别看源码）
+%   思路 = 一两句话讲清算法怎么走
+%   代码 = 粘 src/tests.cpp 里的实现（或用 \lstinputlisting 引用）
+%   结果 = 测试输出 / 结果图
+% 把下面所有 “TODO” 换成你自己的内容即可。
+% ============================================================
+\documentclass[11pt,a4paper]{ctexart}
+
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  frame=single,
+  breaklines=true,
+  language=C++,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{teal},
+  stringstyle=\color{orange!80!black},
+  showstringspaces=false,
+  columns=flexible,
+}
+
+\title{第一次测试 6 题解题报告}
+\author{Liboven \\ \small 北洋机甲算法组 2027 赛季培训}
+\date{\today}
+
+\begin{document}
+
+% 目录只列到 section 级（6 题 + 附录），否则 30 行小节会把目录挤到第二页
+\setcounter{tocdepth}{1}
+
+\maketitle
+
+\begin{abstract}
+本报告记录我对北洋机甲算法组第一次测试 6 道题的实现思路与验证结果：前三题用 C++ 复现
+C 字符串库函数（\texttt{my\_strlen}、\texttt{my\_strcat}、\texttt{my\_strstr}），
+后三题是图像处理中的常用函数（\texttt{rgb2gray}、\texttt{resize}、\texttt{hist\_eq}）。
+所有代码在 WSL Ubuntu 22.04 下用 CMake + g++ 11.4 编译；图像结果由程序生成，
+并与仓库中的参考答案逐像素比对。
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{my\_strlen：自己实现字符串长度}
+\subsection{题目}
+% TODO：用自己的话复述要求（别看源码，凭理解写）
+统计一个以 \texttt{'\textbackslash 0'} 结尾的字符串有多少个字符，不调用现成的
+\texttt{strlen}。
+
+\subsection{思路}
+% TODO：一两句话。指针怎么走、什么时候停
+从首地址开始，只要当前字符不是结束符就往后走一步并计数；遇到结束符时计数值就是长度。
+
+\subsection{代码}
+\begin{lstlisting}
+int my_strlen(char* str) {
+  int len = 0;
+  while (str[len] != '\0') ++len;
+  return len;
+}
+\end{lstlisting}
+
+\subsection{结果}
+% TODO：换成你的终端输出
+\texttt{test\_strlen()} 输出：\textbf{通过}（对 \texttt{"123456"}、\texttt{""}、
+\texttt{"hello world!"} 三个样例都与标准库结果一致）。
+
+% ============================================================
+\section{my\_strcat：字符串拼接}
+\subsection{题目}
+% TODO
+\subsection{思路}
+% TODO
+\subsection{代码}
+\begin{lstlisting}
+// TODO：粘上你的 my_strcat 实现
+\end{lstlisting}
+\subsection{结果}
+% TODO
+
+% ============================================================
+\section{my\_strstr：子串查找}
+\subsection{题目}
+% TODO
+\subsection{思路}
+% TODO
+\subsection{代码}
+\begin{lstlisting}
+// TODO：粘上你的 my_strstr 实现
+\end{lstlisting}
+\subsection{结果}
+% TODO
+
+% ============================================================
+\section{rgb2gray：彩色图转灰度图}
+\subsection{题目}
+% TODO
+\subsection{思路}
+% TODO：记得写清下标公式
+彩色图在内存里按 \texttt{R,G,B} 三通道连续存放，第 $(x,y)$ 个像素的三个通道位于
+\texttt{in[(y*w+x)*3]}、\texttt{+1}、\texttt{+2}。灰度公式为
+\begin{equation}
+V = 0.2989\,R + 0.5870\,G + 0.1140\,B
+\end{equation}
+
+\subsection{代码}
+\begin{lstlisting}
+// TODO：粘上你的 rgb2gray 实现
+\end{lstlisting}
+
+\subsection{结果}
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.45\textwidth]{../images/rgb2gray/input.jpg}
+  \includegraphics[width=0.45\textwidth]{../images/rgb2gray/output.jpg}
+  \caption{左：输入彩色图；右：我的程序输出的灰度图}
+\end{figure}
+
+% ============================================================
+\section{resize：双线性插值缩放}
+\subsection{题目}
+% TODO
+\subsection{思路}
+% TODO
+\subsection{代码}
+\begin{lstlisting}
+// TODO：粘上你的 resize 实现
+\end{lstlisting}
+\subsection{结果}
+% TODO：可插入 ../images/resize/output0.jpg 与 output1.jpg
+
+% ============================================================
+\section{hist\_eq：直方图均衡化}
+\subsection{题目}
+% TODO
+\subsection{思路}
+% TODO
+\subsection{代码}
+\begin{lstlisting}
+// TODO：粘上你的 hist_eq 实现
+\end{lstlisting}
+\subsection{结果}
+% TODO
+
+% ============================================================
+\section*{附录：如何验证}
+\addcontentsline{toc}{section}{附录：如何验证}
+\begin{lstlisting}[language=bash]
+cd ~/tjurm2027-test1
+cmake --build build -j$(nproc)
+cd build && ./tjurm-test          # 注意必须在 build/ 里运行（图片路径是 ../ 相对的）
+\end{lstlisting}
+图像题的结果可用 \texttt{git status} 做字节级验收：产出图若与仓库里的参考版本不同，
+它们会显示为修改状态。
+
+\end{document}

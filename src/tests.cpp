@@ -39,6 +39,21 @@ char* my_strstr(char* s, char* p) {
    */
 
   // IMPLEMENT YOUR CODE HERE
+  int len_s = my_strlen(s);
+  int len_p = my_strlen(p);
+  if (len_p == 0) {
+    return s;
+  }
+  for (int i = 0; i < len_s - len_p + 1; i++) {
+    for (int j = 0; j < len_p; j++) {
+      if (s[i + j] != p[j]) {
+        break;
+      }
+      if (j == len_p - 1) {
+        return &s[i];
+      }
+    }
+  }
   return 0;
 }
 
