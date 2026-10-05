@@ -122,7 +122,14 @@ void rgb2gray(float* in, float* out, int h, int w) {
    */
 
   // IMPLEMENT YOUR CODE HERE
-  // ...
+  for (int y = 0; y < h; ++y) {
+    for (int x = 0; x < w; ++x) {
+      int gray = y * w + x;
+      int color = gray * 3;
+      out[gray] =
+          in[color] * 0.2989 + in[color + 1] * 0.5870 + in[color + 2] * 0.1140;
+    }
+  }
 }
 
 // 练习5，实现图像处理算法 resize：缩小或放大图像
