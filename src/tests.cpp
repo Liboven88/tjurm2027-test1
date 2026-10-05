@@ -278,4 +278,21 @@ void hist_eq(float* in, int h, int w) {
    */
 
   // IMPLEMENT YOUR CODE HERE
+  int hist[256] = {0};
+  for (int i = 0; i < h * w; ++i) {
+    int bin = in[i];
+    hist[bin]++;
+  }
+  int cdf[256] = {0};
+  cdf[0] = hist[0];
+  for (int i = 1; i < 256; ++i) {
+    cdf[i] = cdf[i - 1] + hist[i];
+  }
+  float map[256] = {0};
+  for (int i = 0; i < 256; ++i) {
+    map[i] = static_cast<float>(cdf[i]) / static_cast<float>(h * w) * 255.0f;
+  }
+  for (int i = 0; i < h * w; ++i) {
+    in[i] = map[static_cast<int>(in[i])];
+  }
 }
