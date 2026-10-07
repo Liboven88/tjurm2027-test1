@@ -1,0 +1,59 @@
+% ============================================================
+% 第 10 课 · LaTeX 最小练习（先编出你的第一个 PDF）
+%
+% 编译（中文必须用 xelatex；编两遍目录/引用才准）：
+%     cd ~/tjurm2027-test1/report
+%     xelatex lesson10_drill.tex
+%
+% 目标：把 3 个 TODO 填上，编出一个含「章节 / 公式 / 代码块 / 图片」的 PDF。
+% 提示：LaTeX 里 % 之后是注释；\ 开头的都是命令；{} 里是参数。
+% ============================================================
+\documentclass[11pt,a4paper]{ctexart}   % 中文文档用 ctexart + xelatex
+
+\usepackage{graphicx}    % 插图
+\usepackage{listings}    % 代码块
+\usepackage{amsmath}     % 数学公式
+\usepackage{xcolor}      % 代码块高亮
+
+\title{我的第一个 \LaTeX{} 文档}
+\author{Liboven}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{一句话介绍}
+这是用 \LaTeX{} 排出来的：中文正常显示，章节编号自动生成。
+注意：正文里的下划线、百分号等特殊字符要转义，比如 \texttt{my\_strlen}、50\%。
+
+% ------------------------------------------------------------------
+% TODO 1：加一个二级标题「数学公式」，并在下面放一个带编号的公式
+   \subsection{数学公式}
+   \begin{equation}
+     V = 0.2989R + 0.5870G + 0.1140B
+   \end{equation}
+% ------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------
+% TODO 2：加一个二级标题「代码块」，并在下面写三行 C++ 代码
+   \subsection{代码块}
+   \begin{lstlisting}
+   while (*p != '\0') { ++p; }
+   \end{lstlisting}
+%   注意：代码块里的内容不用转义
+% ------------------------------------------------------------------
+
+
+% ------------------------------------------------------------------
+% TODO 3：加一个二级标题「图片」，插入仓库里的一张结果图
+   \subsection{图片}
+   \begin{figure}[h]
+     \centering
+     \includegraphics[width=0.6\textwidth]{../images/rgb2gray/output.jpg}
+     \caption{我的 rgb2gray 输出}
+   \end{figure}
+%   图片路径是相对这个 .tex 文件的
+% ------------------------------------------------------------------
+
+\end{document}

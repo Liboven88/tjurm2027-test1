@@ -1,0 +1,231 @@
+% ============================================================
+% 附加题（选做）—— 两节，追加到 main.tex 的 \end{document} 之前
+%
+% 用法（二选一）：
+%   ① 把下面两节整段粘到 main.tex 的 \end{document} 之前
+%   ② 或在 main.tex 里写 \input{extra}（本文件与 main.tex 同目录）
+%
+% 用到的宏包 main.tex 里都已有（listings / graphicx / booktabs / amsmath），无需额外加载。
+% （地图已由脚本替换为你程序实际输出的地图）
+% ============================================================
+
+\section{附加题一：多目标下的最佳打击目标选择}
+\label{sec:visual}
+
+\subsection{题目}
+模拟 RoboMaster 自瞄中的目标选择：记录 4 个敌方目标的二维坐标与兵种 ID，
+\textbf{选出距离准心（屏幕中心，即原点）最近的目标并输出其兵种 ID}。
+要求采用面向对象方式设计两个类：\texttt{Enemy}（坐标 + 兵种 ID + 设置/获取函数）与
+\texttt{Target}（内含 4 个 \texttt{Enemy} 对象的数组，并能选出最佳目标）。
+
+\subsection{思路}
+\begin{enumerate}
+  \item \textbf{Enemy 管“一个目标”}：\texttt{id}、\texttt{x}、\texttt{y} 都是私有成员，
+        只能通过公开的 \texttt{Set} / \texttt{getX} / \texttt{getY} / \texttt{getid} 读写。
+        数据私有、接口公开，外部就无法把对象改成非法状态。
+  \item \textbf{Target 管“一组目标”}：内部持有 \texttt{Enemy enemies[4]} 对象数组；
+        \texttt{setEnemy(i, ...)} 把数据转交给第 $i$ 个 \texttt{Enemy}，
+        \texttt{choose()} 遍历数组选出离准心最近的那个。
+  \item \textbf{比较距离时只比较距离的平方}：$d^2 = x^2 + y^2$ 与 $d = \sqrt{x^2+y^2}$
+        单调性完全一致，因此省掉一次开方，也避免浮点误差。
+  \item \textbf{默认构造函数}：\texttt{Enemy} 必须有无参构造函数，否则
+        \texttt{Enemy enemies[4];} 无法编译——数组里每个元素都要能“凭空造出来”。
+\end{enumerate}
+
+\subsection{代码}
+\begin{lstlisting}
+class Enemy {
+public:
+    Enemy() : id('?'), x_(0), y_(0) {}                 // 默认构造函数：对象数组需要它
+    void Set(char ID, double x, double y) { id = ID; x_ = x; y_ = y; }
+    double getX() const { return x_; }                 // const：承诺不修改自身
+    double getY() const { return y_; }
+    char   getid() const { return id; }
+private:
+    char id; double x_, y_;                            // 数据私有，外部只能走公开接口
+};
+
+class Target {
+public:
+    void setEnemy(int index, char ID, double x, double y) {
+        enemies[index].Set(ID, x, y);                  // 转交给对应的 Enemy 对象
+    }
+    char choose() const {
+        int best = 0;
+        for (int i = 1; i < 4; ++i) {
+            double d  = enemies[i].getX() * enemies[i].getX()
+                      + enemies[i].getY() * enemies[i].getY();
+            double db = enemies[best].getX() * enemies[best].getX()
+                      + enemies[best].getY() * enemies[best].getY();
+            if (d < db) best = i;                      // 只比平方，省一次开方
+        }
+        return enemies[best].getid();
+    }
+private:
+    Enemy enemies[4];
+};
+
+int main() {
+    Target target;
+    for (int i = 0; i < 4; i++) {
+        double x, y; char id;
+        cout << "请输入第 " << i + 1 << " 个目标的兵种ID和坐标(x y): ";
+        cin >> id >> x >> y;
+        target.setEnemy(i, id, x, y);                  // 通过 Target 的接口写入
+    }
+    cout << target.choose() << endl;                   // 输出最佳目标的兵种 ID
+    return 0;
+}
+\end{lstlisting}
+
+\subsection{结果}
+用题目附带的 \texttt{visual/test.txt} 中 5 组用例测试（第 5 组含小数坐标），
+实际输出与期望\textbf{全部一致}：
+
+\begin{table}[h]\centering
+  \caption{附加题一：5 组用例的验证结果}
+  \begin{tabular}{clc}
+    \toprule
+    用例 & 四个目标（ID 与坐标） & 期望 / 实际 \\
+    \midrule
+    1 & H(-9,3)\ E(1,4)\ S(-3,1)\ I(7,-3) & S / \textbf{S} \\
+    2 & H(0,5)\ S(-4,0)\ T(0,-2)\ I(6,0) & T / \textbf{T} \\
+    3 & H(7,2)\ S(-5,5)\ T(2,-1)\ I(8,8) & T / \textbf{T} \\
+    4 & H(10,10)\ S(-8,6)\ T(5,-9)\ I(1,1) & I / \textbf{I} \\
+    5 & H(2.5,3.5)\ S(-1.5,0.5)\ T(4,-1)\ I(0.5,-0.5) & I / \textbf{I} \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{附加题二：迷宫最短路径（继承 + 广度优先搜索）}
+\label{sec:navigate}
+
+\subsection{题目}
+给定一张 $14\times 71$ 的地图，\texttt{\#} 表示障碍、\texttt{.} 表示空地，
+求机器人从左上到右下的\textbf{最短路径}，把路径用 \texttt{C} 标出并打印整张地图；
+机器人只能四向移动。\textbf{加分项}：考虑机器人有体积、需要 $3\times3$ 的空地才能安全移动，
+要求给出满足该约束的路径。
+
+\subsection{思路}
+\begin{enumerate}
+  \item \textbf{继承}：写一个 \texttt{MAP\_BASE} 的子类 \texttt{SHORTEST\_PATH}，
+        直接使用基类 \texttt{protected} 的地图 \texttt{map\_in} 与基类的 \texttt{print()}，
+        自己额外加一个 \texttt{dist} 数组记录步数。
+  \item \textbf{为什么用 BFS}：队列先进先出，程序按“离起点的步数”一层层向外扩展——
+        先看所有 1 步能到的格子、再看 2 步能到的……
+        所以\textbf{第一次到达某格时，走的一定是最少步数}。若改用栈（DFS），
+        会一头扎到底，第一次到达不保证最短。
+  \item \textbf{入队时就标记 \texttt{dist}}（而不是出队时）：否则同一个格子会被它的多个邻居
+        反复入队，队列膨胀甚至死循环。
+  \item \textbf{回溯}：BFS 只知道步数、不知道路线。从终点反着走，每步都找
+        “$\texttt{dist}$ 恰好比当前小 1”的邻居，一路回到起点，沿途标 \texttt{C}——
+        这样不需要额外的 \texttt{from} 数组。
+  \item \textbf{加分项}：把“这一格是空地”换成“以这一格为中心的 $3\times3$ 全是空地”。
+        注意地图两个角 $(0,0)$、$(13,70)$ 本身就是墙，真正的起终点是 $(1,1)$ 与 $(12,69)$；
+        而 $(1,1)$ 紧贴边界、它的 $3\times3$ 邻域里必然有墙，\textbf{机器人根本放不下}——
+        所以加分版的安全起终点是 $(2,2)$ 与 $(11,68)$。
+\end{enumerate}
+
+\subsection{代码}
+\begin{lstlisting}
+class SHORTEST_PATH : public MAP_BASE {
+public:
+    bool is_3x3_clear(int r, int c) {              // 机器人中心在 (r,c) 时能否安全放置
+        for (int i = -1; i <= 1; ++i)
+            for (int j = -1; j <= 1; ++j)
+                if (map_in[r + i][c + j] == '#') return false;
+        return true;
+    }
+    void path() {
+        const int W = 70, H = 14;
+        int dist[H][W];
+        for (int r = 0; r < H; ++r)
+            for (int c = 0; c < W; ++c) dist[r][c] = -1;
+
+        queue<pair<int,int>> bfs;                  // 队列先进先出 → 层序扩展 → 最短路
+        dist[2][2] = 0;                            // 加分版的安全起点
+        bfs.push({2, 2});
+        int dr[4] = {-1, 1, 0, 0};                 // 四向：上、下、左、右
+        int dc[4] = {0, 0, -1, 1};
+
+        while (!bfs.empty()) {
+            pair<int,int> cur = bfs.front(); bfs.pop();
+            if (cur.first == 11 && cur.second == 68) break;
+            for (int i = 0; i < 4; ++i) {
+                int nr = cur.first + dr[i], nc = cur.second + dc[i];
+                if (nr >= 2 && nr <= 11 && nc >= 2 && nc <= 68 &&
+                    is_3x3_clear(nr, nc) && dist[nr][nc] == -1) {
+                    bfs.push({nr, nc});
+                    dist[nr][nc] = dist[cur.first][cur.second] + 1;   // 入队即标记
+                }
+            }
+        }
+
+        int r = 11, c = 68;                        // 回溯：沿 dist 下坡走回起点
+        while (r != 2 || c != 2) {
+            bool found = false;
+            for (int i = 0; i < 4; ++i) {
+                map_in[r][c] = 'C';
+                int nr = r + dr[i], nc = c + dc[i];
+                if (nr >= 2 && nr <= 11 && nc >= 2 && nc <= 68 &&
+                    is_3x3_clear(nr, nc) && dist[nr][nc] == dist[r][c] - 1) {
+                    r = nr; c = nc; found = true;
+                }
+            }
+            if (!found) break;                     // 保险：避免死循环
+        }
+        map_in[2][2] = 'C';
+    }
+};
+
+int main() {
+    SHORTEST_PATH navigator;
+    navigator.path();
+    navigator.print();                             // 基类提供的打印函数
+}
+\end{lstlisting}
+
+\subsection{结果}
+程序输出如下（加分版：机器人全程停在 $3\times3$ 的空地上）：
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize]
+#######################################################################
+#.............................................######...........##.....#
+#.CC........#############...CCCCCCCCCCCCC........######.......#########
+#..CC.......#####..........CC...........CC..###...####.......##########
+##..CC.........##.........CC..#######....CC...........................#
+###..CC.............CCCCCCC...............CCCCCCCCCCCCCC..............#
+#.....CC..####.....CC.........######...................CC..####.......#
+#......CC..##.....CC..#.##...................######.....CC............#
+#.......CC.......CC......................................CCCC.........#
+#........CCCCCCCCC............##............................CC..#######
+#............................................................CC.......#
+##########.............#######..########......#########.......CCCCCCC.#
+#...............................###############.......................#
+#######################################################################
+\end{lstlisting}
+
+我把输出交给脚本做了 4 项不变量检查，全部通过：
+
+\begin{enumerate}
+  \item 除路径外，地图其余格子与题目给定地图\textbf{完全一致}（没有误改）；
+  \item \texttt{C} 的个数为 \textbf{90}，对应 \textbf{89} 次移动，与独立实现的 BFS 结果一致；
+  \item \texttt{C} 构成一条\textbf{连续的四连通路径}（每个 \texttt{C} 的 \texttt{C} 邻居数不超过 2，
+        无断裂、无分叉），且从起点能遍历全部 \texttt{C}；
+  \item 路径上\textbf{每一格的 $3\times3$ 邻域全为空地}，满足加分项要求。
+\end{enumerate}
+
+作为对照：若去掉 $3\times3$ 约束，同一张地图上的最短路径为 \textbf{80} 个格子（79 次移动），
+起终点是 $(1,1)$ 与 $(12,69)$。两个数字由同一套 BFS 得到，区别只在于“能否走”的判定条件。
+
+\begin{table}[h]\centering
+  \caption{附加题二：两种约束下的最短路径}
+  \begin{tabular}{llcc}
+    \toprule
+    版本 & 起点 $\to$ 终点 & 路径格子数 & 移动步数 \\
+    \midrule
+    基础（仅要求是空地） & $(1,1) \to (12,69)$ & 80 & 79 \\
+    加分（每格 $3\times3$ 全空） & $(2,2) \to (11,68)$ & \textbf{90} & \textbf{89} \\
+    \bottomrule
+  \end{tabular}
+\end{table}

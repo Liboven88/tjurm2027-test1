@@ -39,7 +39,7 @@
 }
 
 \title{第一次测试 6 题解题报告}
-\author{Liboven \\ \small 北洋机甲算法组 2027 赛季培训}
+\author{李博文 \\ \small 北洋机甲算法组 2027 赛季培训}
 \date{\today}
 
 \begin{document}
@@ -89,32 +89,58 @@ int my_strlen(char* str) {
 \section{my\_strcat：字符串拼接}
 \subsection{题目}
 % TODO
+把传入的两个字符串首尾拼接在一起，组成一个新的字符串，并确保以\texttt{'\textbackslash 0'}结尾
 \subsection{思路}
 % TODO
+让传进来的*str1走到str1的结束符上，再利用循环把str2的字符值逐个赋给*str1，二者每轮循环自增，最后在拼接字符串末尾加上\texttt{'\textbackslash 0'}，过程中要保证str1申请的内存空间足够大
 \subsection{代码}
 \begin{lstlisting}
-// TODO：粘上你的 my_strcat 实现
+void my_strcat (char* str_1, char* str_2){
+  while (*str_1 != '\0') str_1++;
+  while (*str_2 != '\0') {
+    *str_1 = *str_2;
+    str_1++;
+    str_2++;
+  }
+  *str_1 = '\0';
+}
 \end{lstlisting}
 \subsection{结果}
 % TODO
-
+\texttt{test\_strcat()} 输出：\textbf{通过}（先用标准库 \texttt{strcat} 算出期望结果，
+再用 \texttt{strcmp} 比较整串，说明结束符 \texttt{'\textbackslash 0'} 也写对了）。
 % ============================================================
 \section{my\_strstr：子串查找}
 \subsection{题目}
 % TODO
+在一个字符串中查找是否有与目标子串完全相同的部分，若有，返回这部分的首地址；若无，返回nullptr
 \subsection{思路}
 % TODO
+通过循环找出第一个相同的字符，并将之后的每个字符进行对比，若完全相同则返回第一个相同字符在字符串中的地址；若出现不同则break，寻找下一个“第一个相同的字符”,一直没找到返回nullptr。过程中需保证字符串排查余下的长度大于等于字串长度
+特殊情况：目标子串为空时，直接返回字符串首地址
 \subsection{代码}
 \begin{lstlisting}
-// TODO：粘上你的 my_strstr 实现
+char* my_strstr(char* s, char* p) {
+  int len_s = my_strlen(s), len_p = my_strlen(p);
+  if (len_p == 0) return s;
+  for (int i = 0; i < len_s - len_p + 1; ++i) {
+    for (int j = 0; j < len_p; ++j) {
+      if (s[i + j] != p[j]) break;
+      if (j == len_p - 1) return &s[i];
+    }
+  }
+  return 0;
+}
 \end{lstlisting}
 \subsection{结果}
 % TODO
-
+\texttt{test\_strstr()} 输出：\textbf{通过}（对 \texttt{"wjsfjdvioz"}、\texttt{"qqqqq"}、
+\texttt{"j"} 三个子串，返回的指针都与标准库 \texttt{strstr} 相同）。
 % ============================================================
 \section{rgb2gray：彩色图转灰度图}
 \subsection{题目}
 % TODO
+将传入的彩色图转为灰度图
 \subsection{思路}
 % TODO：记得写清下标公式
 彩色图在内存里按 \texttt{R,G,B} 三通道连续存放，第 $(x,y)$ 个像素的三个通道位于
@@ -122,12 +148,18 @@ int my_strlen(char* str) {
 \begin{equation}
 V = 0.2989\,R + 0.5870\,G + 0.1140\,B
 \end{equation}
-
+以纵坐标自增为外层循环，横坐标自增为内层循环，遍历图片的每个像素，并用灰度公式进行转化
 \subsection{代码}
 \begin{lstlisting}
-// TODO：粘上你的 rgb2gray 实现
+void rgb2gray(float* in, float* out, int h, int w) {
+  for (int y = 0; y < h; ++y){
+    for (int x = 0; x < w; ++x){
+      int index = y*w + x;
+      out[index] = in[index*3]*0.2989 + in[index*3 + 1]*0.5870 + in[index*3 + 2]*0.1140;
+    }
+  }
+}
 \end{lstlisting}
-
 \subsection{结果}
 \begin{figure}[h]
   \centering
@@ -140,28 +172,91 @@ V = 0.2989\,R + 0.5870\,G + 0.1140\,B
 \section{resize：双线性插值缩放}
 \subsection{题目}
 % TODO
+通过双线性插值法，实现图片的缩放函数
 \subsection{思路}
 % TODO
+\begin{equation}
+             x2 - x          x - x1
+    v = v1 * ———————— + v2 * ————————
+             x2 - x1         x2 - x1
+\end{equation}
+1. 对于每个 dst 中的像素点 (x, y)，先计算出其在 src 中的坐标 float(x0,y0)，
+2. 然后计算出其在 src 中的四个邻居点:
+ x1 = static\_cast<int>(x0), y1 = static\_cast<int>(y0)
+  上面这样可以直接将 float 通过下取整的方式转换为 int， 剩下三个邻居就好找了
+3. 用双线性插值法，用四个邻居的v值算出插值，再赋给 dst 中的像素点
+4. 注意上面的方法中，四个邻居点的坐标可能会超出 src 的范围， 所以需要对其进行边界检查
 \subsection{代码}
 \begin{lstlisting}
-// TODO：粘上你的 resize 实现
+void resize(float* in, float* out, int h, int w, int c, float scale) {
+  int new_h = h * scale, new_w = w * scale;
+  for (int y = 0; y < new_h; ++y){
+    for (int x = 0; x < new_w; ++x){
+      for (int ch = 0; ch < c; ++ch){
+  float x0 = static_cast<float>(x) / scale, y0 = static_cast<float>(y) / scale;
+  int x1 = static_cast<int>(x0), int y1 = static_cast<int>(y0);
+  if(x1 >= w - 1) x1 = w - 2;
+  if(y1 >= h - 1) y1 = h - 2;
+  int x2 = x1 + 1, int y2 = y1 + 1;
+  float q1 = in[(y1*w + x1)*c + ch] * (x2 - x0) / (x2 - x1)
+           + in[(y1*w + x2)*c + ch] * (x0 - x1) / (x2 - x1);
+  float q2 = in[(y2*w + x1)*c + ch] * (x2 - x0) / (x2 - x1)
+           + in[(y2*w + x2)*c + ch] * (x0 - x1) / (x2 - x1);
+           float Q = q1 * (y2 - y0) / (y2 - y1) + q2 * (y0 - y1) / (y2 - y1);
+           out[(y*new_w + x)*c + ch] = Q; 
+      }
+    }
+  }
+}
 \end{lstlisting}
 \subsection{结果}
 % TODO：可插入 ../images/resize/output0.jpg 与 output1.jpg
-
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.27\textwidth]{../images/resize/input.jpg}
+  \includegraphics[width=0.18\textwidth]{../images/resize/output0.jpg}
+  \includegraphics[width=0.54\textwidth]{../images/resize/output1.jpg}
+  \caption{左：输入原图；中：输入缩小图；右：输入放大图}
+\end{figure}
+\texttt{test\_resize()} 生成 \texttt{output0.jpg}（1620×1098，2/3 倍）与
+\texttt{output1.jpg}（4860×3296，2 倍）：尺寸与 \texttt{h*scale}、\texttt{w*scale} 一致，
+色彩统计与输入一致，边界无越界噪点。
 % ============================================================
 \section{hist\_eq：直方图均衡化}
 \subsection{题目}
 % TODO
+让传入的灰度图片灰度级分布更均匀，即增强图片对比度
 \subsection{思路}
 % TODO
+1.建好数桶，记录每个灰度数出现的频次
+2.累计每个灰度级及其以下的灰度级的总频次
+3.依据每个灰度级及其以下的灰度级的总频次在总像素数的占比，映射出新的均衡的灰度级分布
+4.把新的灰度级赋给对应像素
 \subsection{代码}
 \begin{lstlisting}
-// TODO：粘上你的 hist_eq 实现
+
+void hist_eq(float* in, int h, int w) {
+  int hist[256] = {0};
+  for (int i = 0; i < h*w; ++i) ++hist[static_cast<int>(in[i])];
+  int cdf[256] = {0};
+  cdf[0] = hist[0];
+  for (int i = 1; i < 256; ++i) cdf[i] = cdf[i - 1] + hist[i];
+  float map[256] = {0};
+  for (int i = 0; i < 256; ++i) map[i] = static_cast<float>(cdf[i]) / static_cast<float>(h * w) * 255.0f;;
+  for (int i = 0; i < h*w; ++i) in[i] = map[static_cast<int>(in[i])];
+}
 \end{lstlisting}
 \subsection{结果}
 % TODO
-
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.45\textwidth]{../images/hist_eq/input.jpg}
+  \includegraphics[width=0.45\textwidth]{../images/hist_eq/output.jpg}
+  \caption{左：输入目标图；右：输入修改图}
+\end{figure}
+\texttt{test\_hist\_eq()} 生成 \texttt{output.jpg}，与参考图 \texttt{answer.jpg}
+逐像素平均差 \textbf{0.72}/255；均衡化后全图均值 133（接近中灰 128），
+说明直方图确已被拉平。
 % ============================================================
 \section*{附录：如何验证}
 \addcontentsline{toc}{section}{附录：如何验证}
@@ -172,5 +267,5 @@ cd build && ./tjurm-test          # 注意必须在 build/ 里运行（图片路
 \end{lstlisting}
 图像题的结果可用 \texttt{git status} 做字节级验收：产出图若与仓库里的参考版本不同，
 它们会显示为修改状态。
-
+\input{extra}
 \end{document}
